@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - "starter/frontend/**"  # Cập nhật lại theo cấu trúc thư mục của bạn
+      - "starter/frontend/**"
 
 jobs:
 
@@ -20,27 +20,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 16.x  # Trực tiếp chỉ định phiên bản Node.js
+          node-version: 18.x  # Đảm bảo bạn sử dụng đúng phiên bản Node.js
 
       - name: Cache Node.js dependencies
         uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: npm-${{ hashFiles('starter/frontend/package-lock.json') }}  # Cập nhật lại đường dẫn
+          key: npm-${{ hashFiles('starter/frontend/package-lock.json') }}  # Đảm bảo sử dụng đường dẫn đúng
           restore-keys: |
             npm-
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+        working-directory: ./starter/frontend  # Đảm bảo đúng thư mục
 
       - name: Run ESLint
         run: npm run lint -- --fix
-        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+        working-directory: ./starter/frontend  # Đảm bảo đúng thư mục
 
       - name: Run Tests
         run: npm test
-        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+        working-directory: ./starter/frontend  # Đảm bảo đúng thư mục
 
   test:
     name: Frontend Testing
@@ -51,11 +51,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+        working-directory: ./starter/frontend  # Đảm bảo đúng thư mục
 
       - name: Run Tests
         run: npm test
-        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+        working-directory: ./starter/frontend  # Đảm bảo đúng thư mục
 
   build:
     name: Build & Push Docker Image
@@ -67,7 +67,7 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+        working-directory: ./starter/frontend  # Đảm bảo đúng thư mục
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -91,7 +91,7 @@ jobs:
           aws eks update-kubeconfig --name cluster
           export EXTERNALIP=$(kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}')
           echo $EXTERNALIP
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP ./starter/frontend  # Cập nhật lại thư mục và docker build context
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP ./starter/frontend  # Đảm bảo đúng thư mục và docker build context
           docker images
 
       - name: Cache Docker image
@@ -99,4 +99,3 @@ jobs:
         with:
           path: ~/.docker
           key: docker-${{ github.sha }}-frontend
-
