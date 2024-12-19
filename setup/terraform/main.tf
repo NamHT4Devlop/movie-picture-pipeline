@@ -275,7 +275,7 @@ resource "aws_codebuild_project" "codebuild" {
 
   source {
     type            = "GITHUB"
-    location        = "https://github.com/NamHT4Devlop/movie-picture-pipeline.git"
+    location        = "https://github.com/NamHT4Devlop/movie-picture-pipeline"
     git_clone_depth = 1
     buildspec       = "buildspec.yml"
   }
