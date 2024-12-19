@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - development
     paths:
       - 'starter/backend/**'  # update path root project back-end
 

@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - main
+      - development
     paths:
       - "starter/backend/**"  # Thư mục chính của bạn là starter/backend
 

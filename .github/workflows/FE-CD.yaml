@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - development
     paths:
       - 'starter/frontend/**'  # Cập nhật lại theo cấu trúc thư mục của bạn
 
