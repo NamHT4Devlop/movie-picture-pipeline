@@ -1,31 +1,102 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
+name: Frontend Continuous Integration Workflow
 
 on:
-  push:
-    branches: [ "main" ]
+  workflow_dispatch:
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths:
+      - "starter/frontend/**"  # Cập nhật lại theo cấu trúc thư mục của bạn
 
 jobs:
-  build:
 
+  lint:
+    name: Frontend Linting Jobs
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16.x  # Trực tiếp chỉ định phiên bản Node.js
+
+      - name: Cache Node.js dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('starter/frontend/package-lock.json') }}  # Cập nhật lại đường dẫn
+          restore-keys: |
+            npm-
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+
+      - name: Run ESLint
+        run: npm run lint -- --fix
+        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+
+      - name: Run Tests
+        run: npm test
+        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+
+  test:
+    name: Frontend Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+
+      - name: Run Tests
+        run: npm test
+        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+
+  build:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./starter/frontend  # Cập nhật lại thư mục
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: true
+
+      - name: Build and Push Docker Image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: frontend
+          IMAGE_TAG: latest
+        run: |
+          aws eks update-kubeconfig --name cluster
+          export EXTERNALIP=$(kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}')
+          echo $EXTERNALIP
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP ./starter/frontend  # Cập nhật lại thư mục và docker build context
+          docker images
+
+      - name: Cache Docker image
+        uses: actions/cache@v3
+        with:
+          path: ~/.docker
+          key: docker-${{ github.sha }}-frontend
+
