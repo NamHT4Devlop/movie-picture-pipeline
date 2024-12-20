@@ -131,12 +131,8 @@ jobs:
           REPOSITORY: backend
           IMAGE_TAG: latest
         run: |
-          echo "Registry: $REGISTRY"
-          echo "Repository: $REPOSITORY"
-          echo "Image Tag: $IMAGE_TAG"
-          echo "ECR: $REGISTRY/$REPOSITORY:$IMAGE_TAG ."
+          echo "Building Docker image: $REGISTRY/$REPOSITORY:$IMAGE_TAG"
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
-          docker images
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
       - name: Cache Docker image
