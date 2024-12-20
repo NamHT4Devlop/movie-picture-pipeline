@@ -12,6 +12,9 @@ on:
 jobs:
   install_dependencies:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -33,6 +36,9 @@ jobs:
   lint:
     name: Backend Linting Jobs
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
     needs: install_dependencies
     steps:
       - name: Run lint with pipenv
@@ -55,6 +61,9 @@ jobs:
   build:
     name: Build and Push Image to ECR
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
     needs: [lint, test]
     steps:
       - name: Checkout code
