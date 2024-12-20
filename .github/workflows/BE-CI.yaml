@@ -29,7 +29,7 @@ jobs:
         run: |
           pip install pipenv flake8 pytest
           pipenv install
-        working-directory: ./starter/backend  # Đảm bảo working directory chính xác
+        working-directory: starter/backend  # Sửa lại đường dẫn
 
   lint:
     name: Backend Linting Jobs
@@ -40,7 +40,7 @@ jobs:
         run: |
           pipenv --version
           pipenv run lint
-        working-directory: ./starter/backend  # Đảm bảo working directory chính xác
+        working-directory: starter/backend  # Sửa lại đường dẫn
 
   test:
     name: Backend Run Tests
@@ -51,7 +51,7 @@ jobs:
         run: |
           pipenv --version
           pipenv run test
-        working-directory: ./starter/backend  # Đảm bảo working directory chính xác
+        working-directory: starter/backend  # Sửa lại đường dẫn
 
   build:
     name: Build and Push Image to ECR
@@ -74,7 +74,7 @@ jobs:
         run: |
           pip install pipenv flake8 pytest
           pipenv install
-        working-directory: ./starter/backend  # Đảm bảo working directory chính xác
+        working-directory: starter/backend  # Sửa lại đường dẫn
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -104,7 +104,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}  # Gắn tag với Git commit SHA
         run: |
           echo "Building Docker image: $REGISTRY/$REPOSITORY:$IMAGE_TAG"
-          docker build --build-arg PYTHON_VERSION=3.10 -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -f ./starter/backend/Dockerfile ./starter/backend
+          docker build --build-arg PYTHON_VERSION=3.10 -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -f starter/backend/Dockerfile starter/backend
           docker images
 
       - name: Push Docker image to ECR

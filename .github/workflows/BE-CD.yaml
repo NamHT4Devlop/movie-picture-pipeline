@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./starter/backend  # update path root project back-end
+        working-directory: starter/backend  # update path root project back-end
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./starter/backend  # update path root project back-end
+        working-directory: starter/backend  # update path root project back-end
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -84,7 +84,7 @@ jobs:
     needs: [lint, test]
     defaults:
       run:
-        working-directory: ./starter/backend  # update path root project back-end
+        working-directory: starter/backend  # update path root project back-end
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -177,7 +177,7 @@ jobs:
 
       - name: Run init.sh
         run: ./init.sh || true
-        working-directory: ./starter/setup  # update path root project back-end
+        working-directory: starter/setup  # update path root project back-end
 
       - name: Set Docker image in Kustomize
         env:
@@ -185,8 +185,8 @@ jobs:
           REPOSITORY: backend
           IMAGE_TAG: latest
         run: kustomize edit set image backend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
-        working-directory: ./starter/backend/k8s  # update path root project back-end
+        working-directory: starter/backend/k8s  # update path root project back-end
 
       - name: Apply Kubernetes resources
         run: kustomize build | kubectl apply -f -
-        working-directory: ./starter/backend/k8s  # update path root project back-end
+        working-directory: starter/backend/k8s  # update path root project back-end
