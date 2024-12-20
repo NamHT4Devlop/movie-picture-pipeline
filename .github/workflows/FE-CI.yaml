@@ -5,7 +5,6 @@ on:
   pull_request:
     branches:
       - main
-      - development
     paths:
       - "frontend/**"
 
@@ -14,6 +13,9 @@ jobs:
   lint:
     name: Frontend Linting Jobs
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [16.x]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,23 +23,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18.x  # Đảm bảo bạn sử dụng đúng phiên bản Node.js
+          node-version: ${{ matrix.node }}
 
       - name: Cache Node.js dependencies
         uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: npm-${{ hashFiles('frontend/package-lock.json') }}  # Đảm bảo sử dụng đường dẫn đúng
+          key: npm-${{ hashFiles('frontend/package-lock.json') }}
           restore-keys: |
             npm-
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./frontend  # Đảm bảo đúng thư mục
+        working-directory: ./frontend
 
       - name: Run ESLint
         run: npm run lint -- --fix
-        working-directory: ./frontend  # Đảm bảo đúng thư mục
+        working-directory: ./frontend
+
+      - name: Run Tests
+        run: npm test
+        working-directory: ./frontend
 
   test:
     name: Frontend Testing
@@ -48,11 +54,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./frontend  # Đảm bảo đúng thư mục
+        working-directory: ./frontend
 
       - name: Run Tests
         run: npm test
-        working-directory: ./frontend  # Đảm bảo đúng thư mục
+        working-directory: ./frontend
 
   build:
     name: Build & Push Docker Image
@@ -64,7 +70,7 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./frontend  # Đảm bảo đúng thư mục
+        working-directory: ./frontend
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -72,14 +78,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-
-      - name: Debug AWS Credentials
-        run: |
-          aws sts get-caller-identity
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
 
       - name: Login to Amazon ECR
         id: login-ecr

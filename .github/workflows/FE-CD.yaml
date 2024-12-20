@@ -5,10 +5,8 @@ on:
   push:
     branches:
       - main
-      - development
     paths:
-      - 'frontend/**'  # Cập nhật lại theo cấu trúc thư mục của bạn
-
+      - 'frontend/**'
 env:
   NODE_VERSION: 18.x
 
@@ -18,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./frontend  # Đảm bảo đường dẫn đúng
+        working-directory: ./frontend
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -27,7 +25,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: npm-${{ hashFiles('frontend/package-lock.json') }}  # Cập nhật lại đường dẫn
+          key: npm-${{ hashFiles('frontend/package-lock.json') }}
           restore-keys: |
             npm-
 
@@ -44,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./frontend  # Đảm bảo đường dẫn đúng
+        working-directory: ./frontend
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -63,7 +61,7 @@ jobs:
     needs: [lint, test]
     defaults:
       run:
-        working-directory: ./frontend  # Đảm bảo đường dẫn đúng
+        working-directory: ./frontend
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -78,14 +76,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-
-      - name: Debug AWS Credentials
-        run: |
-          aws sts get-caller-identity
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -113,7 +103,7 @@ jobs:
       - name: Cache Docker image
         uses: actions/cache@v3
         with:
-          path: ~/.docker  # Đảm bảo đường dẫn cache đúng
+          path: ~/docker-cache
           key: docker-${{ github.sha }}-frontend
           restore-keys: |
             docker-${{ github.sha }}-
@@ -133,14 +123,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Debug AWS Credentials
-        run: |
-          aws sts get-caller-identity
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
-
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -153,7 +135,7 @@ jobs:
 
       - name: Run init.sh
         run:  |
-          ./setup/init.sh || true  # Đảm bảo đường dẫn đúng
+          ./init.sh || true
         working-directory: ./setup
 
       - name: Set Docker image in Kustomize
@@ -163,7 +145,7 @@ jobs:
           IMAGE_TAG: latest
         run: |
           kustomize edit set image frontend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
-        working-directory: ./frontend/k8s  # Cập nhật đường dẫn đúng
+        working-directory: ./frontend/k8s
 
       - name: Apply Kubernetes resources
         run: |
