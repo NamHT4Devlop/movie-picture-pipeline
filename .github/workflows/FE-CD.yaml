@@ -7,7 +7,7 @@ on:
       - main
       - development
     paths:
-      - 'starter/frontend/**'  # Cập nhật lại theo cấu trúc thư mục của bạn
+      - 'frontend/**'  # Cập nhật lại theo cấu trúc thư mục của bạn
 
 env:
   NODE_VERSION: 18.x
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./starter/frontend  # Đảm bảo đường dẫn đúng
+        working-directory: ./frontend  # Đảm bảo đường dẫn đúng
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -27,7 +27,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: npm-${{ hashFiles('starter/frontend/package-lock.json') }}  # Cập nhật lại đường dẫn
+          key: npm-${{ hashFiles('frontend/package-lock.json') }}  # Cập nhật lại đường dẫn
           restore-keys: |
             npm-
 
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./starter/frontend  # Đảm bảo đường dẫn đúng
+        working-directory: ./frontend  # Đảm bảo đường dẫn đúng
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -63,7 +63,7 @@ jobs:
     needs: [lint, test]
     defaults:
       run:
-        working-directory: ./starter/frontend  # Đảm bảo đường dẫn đúng
+        working-directory: ./frontend  # Đảm bảo đường dẫn đúng
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -106,7 +106,7 @@ jobs:
           echo "Repository: $REPOSITORY"
           echo "Image Tag: $IMAGE_TAG"
           echo "ECR: $REGISTRY/$REPOSITORY:$IMAGE_TAG ."
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg=REACT_APP_MOVIE_API_URL=http://$EXTERNALIP -f ./starter/frontend/Dockerfile ./starter/frontend  # Cập nhật Dockerfile path
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg=REACT_APP_MOVIE_API_URL=http://$EXTERNALIP .
           docker images
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
@@ -163,9 +163,9 @@ jobs:
           IMAGE_TAG: latest
         run: |
           kustomize edit set image frontend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
-        working-directory: ./starter/frontend/k8s  # Cập nhật đường dẫn đúng
+        working-directory: ./frontend/k8s  # Cập nhật đường dẫn đúng
 
       - name: Apply Kubernetes resources
         run: |
           kustomize build | kubectl apply -f -
-        working-directory: ./starter/frontend/k8s
+        working-directory: ./frontend/k8s

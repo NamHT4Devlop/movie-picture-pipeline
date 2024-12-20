@@ -7,7 +7,7 @@ on:
       - main
       - development
     paths:
-      - "starter/frontend/**"
+      - "frontend/**"
 
 jobs:
 
@@ -27,17 +27,17 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: npm-${{ hashFiles('starter/frontend/package-lock.json') }}  # Đảm bảo sử dụng đường dẫn đúng
+          key: npm-${{ hashFiles('frontend/package-lock.json') }}  # Đảm bảo sử dụng đường dẫn đúng
           restore-keys: |
             npm-
 
       - name: Install dependencies
         run: npm install
-        working-directory: /starter/frontend  # Đảm bảo đúng thư mục
+        working-directory: ./frontend  # Đảm bảo đúng thư mục
 
       - name: Run ESLint
         run: npm run lint -- --fix
-        working-directory: /starter/frontend  # Đảm bảo đúng thư mục
+        working-directory: ./frontend  # Đảm bảo đúng thư mục
 
   test:
     name: Frontend Testing
@@ -48,11 +48,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: /starter/frontend  # Đảm bảo đúng thư mục
+        working-directory: ./frontend  # Đảm bảo đúng thư mục
 
       - name: Run Tests
         run: npm test
-        working-directory: /starter/frontend  # Đảm bảo đúng thư mục
+        working-directory: ./frontend  # Đảm bảo đúng thư mục
 
   build:
     name: Build & Push Docker Image
@@ -64,7 +64,7 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: /starter/frontend  # Đảm bảo đúng thư mục
+        working-directory: ./frontend  # Đảm bảo đúng thư mục
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -96,7 +96,9 @@ jobs:
           aws eks update-kubeconfig --name cluster
           export EXTERNALIP=$(kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}')
           echo $EXTERNALIP
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP /starter/frontend  # Đảm bảo đúng thư mục và docker build context
+          ls
+          cd frontend
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP .
           docker images
 
       - name: Cache Docker image
