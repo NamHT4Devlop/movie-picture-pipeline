@@ -5,9 +5,8 @@ on:
   push:
     branches:
       - main
-      - development
     paths:
-      - 'backend/**'  # update path root project back-end
+      - 'backend/**'
 
 jobs:
   lint:
@@ -15,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./backend  # update path root project back-end
+        working-directory: ./backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -53,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./backend  # update path root project back-end
+        working-directory: ./backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -84,7 +83,7 @@ jobs:
     needs: [lint, test]
     defaults:
       run:
-        working-directory: ./backend  # update path root project back-end
+        working-directory: ./backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -111,14 +110,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Debug AWS Credentials
-        run: |
-          aws sts get-caller-identity
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
-
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -131,8 +122,12 @@ jobs:
           REPOSITORY: backend
           IMAGE_TAG: latest
         run: |
-          echo "Building Docker image: $REGISTRY/$REPOSITORY:$IMAGE_TAG"
+          echo "Registry: $REGISTRY"
+          echo "Repository: $REPOSITORY"
+          echo "Image Tag: $IMAGE_TAG"
+          echo "ECR: $REGISTRY/$REPOSITORY:$IMAGE_TAG ."
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker images
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
       - name: Cache Docker image
@@ -158,14 +153,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Debug AWS Credentials
-        run: |
-          aws sts get-caller-identity
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
-
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -177,7 +164,7 @@ jobs:
 
       - name: Run init.sh
         run: ./init.sh || true
-        working-directory: ./setup  # update path root project back-end
+        working-directory: ./setup
 
       - name: Set Docker image in Kustomize
         env:
@@ -185,8 +172,8 @@ jobs:
           REPOSITORY: backend
           IMAGE_TAG: latest
         run: kustomize edit set image backend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
-        working-directory: ./backend/k8s  # update path root project back-end
+        working-directory: ./backend/k8s
 
       - name: Apply Kubernetes resources
         run: kustomize build | kubectl apply -f -
-        working-directory: ./backend/k8s  # update path root project back-end
+        working-directory: ./backend/k8s
