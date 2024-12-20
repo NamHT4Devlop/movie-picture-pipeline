@@ -7,7 +7,7 @@ on:
       - main
       - development
     paths:
-      - "starter/backend/**"  # Thư mục chính của bạn là starter/backend
+      - "starter/backend/**"
 
 jobs:
   install_dependencies:
@@ -18,7 +18,7 @@ jobs:
 
       - name: List files in the directory
         run: |
-          ls -R  # Liệt kê tất cả các thư mục và tệp để kiểm tra cấu trúc dự án
+          ls -R starter/backend  # Kiểm tra cấu trúc dự án trong thư mục backend
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -29,7 +29,7 @@ jobs:
         run: |
           pip install pipenv flake8 pytest
           pipenv install
-        working-directory: starter/backend  # Sửa lại đường dẫn
+        working-directory: starter/backend  # Đảm bảo đúng thư mục backend
 
   lint:
     name: Backend Linting Jobs
@@ -40,7 +40,7 @@ jobs:
         run: |
           pipenv --version
           pipenv run lint
-        working-directory: starter/backend  # Sửa lại đường dẫn
+        working-directory: starter/backend  # Đảm bảo đúng thư mục backend
 
   test:
     name: Backend Run Tests
@@ -51,7 +51,7 @@ jobs:
         run: |
           pipenv --version
           pipenv run test
-        working-directory: starter/backend  # Sửa lại đường dẫn
+        working-directory: starter/backend  # Đảm bảo đúng thư mục backend
 
   build:
     name: Build and Push Image to ECR
@@ -63,7 +63,7 @@ jobs:
 
       - name: List files in the directory
         run: |
-          ls -R  # Liệt kê tất cả các thư mục và tệp để kiểm tra cấu trúc dự án
+          ls -R starter/backend  # Kiểm tra lại cấu trúc dự án trong thư mục backend
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -74,7 +74,7 @@ jobs:
         run: |
           pip install pipenv flake8 pytest
           pipenv install
-        working-directory: starter/backend  # Sửa lại đường dẫn
+        working-directory: starter/backend  # Đảm bảo đúng thư mục backend
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
