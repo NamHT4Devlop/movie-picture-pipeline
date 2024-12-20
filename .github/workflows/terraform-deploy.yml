@@ -45,7 +45,7 @@ jobs:
 
       - name: Terraform Validate
         working-directory: setup/terraform
-        run: terraform validate -no-color -lock=false
+        run: terraform validate -no-color
 
       - name: Terraform Destroy
         working-directory: setup/terraform
