@@ -7,7 +7,7 @@ on:
       - main
       - development
     paths:
-      - "starter/backend/**"
+      - "starter/backend/**"  # Thư mục chính của bạn là starter/backend
 
 jobs:
   install_dependencies:
