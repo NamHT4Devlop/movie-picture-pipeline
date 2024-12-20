@@ -57,10 +57,15 @@ jobs:
         working-directory: setup/terraform
         run: terraform apply -auto-approve -input=false
 
+      # Step to Destroy Resources (delete)
+      - name: Terraform Destroy
+        working-directory: setup/terraform
+        run: terraform destroy -auto-approve -input=false
+
       - name: Notify on Success
         if: success()
-        run: echo "Terraform Apply completed successfully!"
+        run: echo "Terraform Apply/Destroy completed successfully!"
 
       - name: Notify on Failure
         if: failure()
-        run: echo "Terraform Apply failed. Please check the logs for errors."
+        run: echo "Terraform Apply/Destroy failed. Please check the logs for errors."
