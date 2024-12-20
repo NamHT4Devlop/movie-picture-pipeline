@@ -16,6 +16,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: List files in the directory
+        run: |
+          ls -R  # Liệt kê tất cả các thư mục và tệp để kiểm tra cấu trúc dự án
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -56,6 +60,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: List files in the directory
+        run: |
+          ls -R  # Liệt kê tất cả các thư mục và tệp để kiểm tra cấu trúc dự án
 
       - name: Setup Python
         uses: actions/setup-python@v5
