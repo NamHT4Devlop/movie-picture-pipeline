@@ -1,4 +1,4 @@
-name: Backend Continuous Deployment Workflow
+name: Backend CD Workflow
 
 on:
   workflow_dispatch:
@@ -25,12 +25,13 @@ jobs:
 
       - name: Install pipenv and flake8
         run: |
-          pip --version
+          pip install --upgrade pip
           pip install pipenv flake8
 
       - name: Install dependencies with pipenv
         run: |
-          pipenv install
+          pipenv install --dev
+        working-directory: ./backend
 
   lint:
     name: Backend Code Linting
@@ -45,7 +46,6 @@ jobs:
 
       - name: Run lint with pipenv
         run: |
-          pipenv --version
           pipenv run lint
 
   test:
@@ -61,7 +61,6 @@ jobs:
 
       - name: Run tests with pipenv
         run: |
-          pipenv --version
           pipenv run test
 
   build:
@@ -93,10 +92,6 @@ jobs:
       - name: Debug AWS Credentials
         run: |
           aws sts get-caller-identity
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
 
       - name: Connect to Amazon ECR
         id: login-ecr
@@ -110,15 +105,31 @@ jobs:
           REPOSITORY: backend
           IMAGE_TAG: latest
         run: |
-          echo "====== Debugging Variables ======"
+          echo "=== Step: Logging Docker Image Details ==="
           echo "Registry: $REGISTRY"
           echo "Repository: $REPOSITORY"
           echo "Image Tag: $IMAGE_TAG"
-          echo "ECR Full Path: $REGISTRY/$REPOSITORY:$IMAGE_TAG"
-          echo "================================="
+
+          echo "=== Step: Building Docker Image ==="
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          if [ $? -eq 0 ]; then
+            echo "Docker Image Built Successfully"
+          else
+            echo "Error: Docker Image Build Failed" >&2
+            exit 1
+          fi
+
+          echo "=== Step: Listing Docker Images ==="
           docker images
+
+          echo "=== Step: Pushing Docker Image to ECR ==="
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          if [ $? -eq 0 ]; then
+            echo "Docker Image Pushed Successfully"
+          else
+            echo "Error: Docker Image Push Failed" >&2
+            exit 1
+          fi
 
   deploy:
     name: Deploy to EKS
@@ -138,10 +149,6 @@ jobs:
       - name: Debug AWS Credentials
         run: |
           aws sts get-caller-identity
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
 
       - name: Connect to Amazon ECR
         id: login-ecr
@@ -153,17 +160,57 @@ jobs:
         run: aws eks update-kubeconfig --name cluster
 
       - name: Run init.sh
-        run: ./init.sh || true
-        working-directory: ./setup
+        run: |
+          chmod +x ./setup/init.sh
+          ./setup/init.sh || true
 
       - name: Configure Docker Image in Kustomize
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: backend
           IMAGE_TAG: latest
-        run: kustomize edit set image backend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
-        working-directory: ./backend/k8s
+        run: |
+          echo "=== Step: Logging Kustomize Configuration Details ==="
+          echo "Registry: $REGISTRY"
+          echo "Repository: $REPOSITORY"
+          echo "Image Tag: $IMAGE_TAG"
+          echo "Working Directory: ./backend/k8s"
+          
+          echo "=== Step: Configuring Docker Image in Kustomize ==="
+          kustomize edit set image backend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
+          if [ $? -eq 0 ]; then
+            echo "Kustomize configuration updated successfully."
+          else
+            echo "Error: Failed to update Kustomize configuration." >&2
+            exit 1
+          fi
+          
+          echo "=== Step: Verifying Kustomize Configuration ==="
+          kustomize build ./backend/k8s | grep "image:" || echo "Warning: No image configuration found." 
 
       - name: Deploy Kubernetes Resources
-        run: kustomize build | kubectl apply -f -
+        run: |
+          echo "=== Step: Preparing to Deploy Kubernetes Resources ==="
+          echo "Working Directory: ./backend/k8s"
+
+          echo "=== Step: Building Kubernetes Manifests with Kustomize ==="
+          kustomize build ./backend/k8s > k8s-manifest.yaml
+          if [ $? -eq 0 ]; then
+            echo "Kustomize build completed successfully. Output saved to k8s-manifest.yaml."
+          else
+            echo "Error: Kustomize build failed." >&2
+            exit 1
+          fi
+
+          echo "=== Step: Applying Kubernetes Resources ==="
+          kubectl apply -f k8s-manifest.yaml
+          if [ $? -eq 0 ]; then
+            echo "Kubernetes resources deployed successfully."
+          else
+            echo "Error: Failed to deploy Kubernetes resources." >&2
+            exit 1
+          fi
+
+          echo "=== Step: Verifying Kubernetes Resource Deployment ==="
+          kubectl get all -n default || echo "Warning: Unable to retrieve Kubernetes resources."
         working-directory: ./backend/k8s

@@ -1,4 +1,4 @@
-name: Frontend Continuous Deployment Workflow
+name: Frontend CD Workflow
 
 on:
   workflow_dispatch:
@@ -85,16 +85,30 @@ jobs:
           REPOSITORY: frontend
           IMAGE_TAG: latest
         run: |
-          set -e  # Fail on errors
+          echo "=== Step: Updating kubeconfig for EKS ==="
           aws eks update-kubeconfig --name cluster
+          echo "Kubeconfig updated successfully"
+
+          echo "=== Step: Fetching External IP of Backend Service ==="
           export EXTERNALIP=$(kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}')
-          echo "External IP: $EXTERNALIP"
+          echo "Fetched External IP: $EXTERNALIP"
+
+          echo "=== Step: Logging Docker Image Details ==="
           echo "Registry: $REGISTRY"
           echo "Repository: $REPOSITORY"
           echo "Image Tag: $IMAGE_TAG"
+          echo "React App Movie API URL: http://$EXTERNALIP"
+
+          echo "=== Step: Building Docker Image ==="
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP .
+          echo "Docker Image Built Successfully"
+
+          echo "=== Step: Listing Docker Images ==="
           docker images
+
+          echo "=== Step: Pushing Docker Image to ECR ==="
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          echo "Docker Image Pushed Successfully"
 
   deploy:
     name: Deploy Frontend to Kubernetes
@@ -135,10 +149,27 @@ jobs:
           REPOSITORY: frontend
           IMAGE_TAG: latest
         run: |
+          echo "Step: Setting Docker image in Kustomize"
+          echo "Registry: $REGISTRY"
+          echo "Repository: $REPOSITORY"
+          echo "Image Tag: $IMAGE_TAG"
+          echo "Updating Kustomize configuration with the image: $REGISTRY/$REPOSITORY:$IMAGE_TAG"
+
           kustomize edit set image frontend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
+          echo "Kustomize configuration updated successfully"
         working-directory: ./frontend/k8s
 
-      - name: Apply Kubernetes resources
+      - name: Apply Kubernetes Resources
         run: |
-          kustomize build | kubectl apply -f -
+          echo "Building Kubernetes manifests..."
+          kustomize build ./frontend/k8s > k8s-manifest.yaml
+          echo "Generated Kubernetes manifests:"
+          cat k8s-manifest.yaml
+
+          echo "Applying Kubernetes resources..."
+          kubectl apply -f k8s-manifest.yaml
+
+          echo "Deployment status:"
+          kubectl rollout status deployment/frontend-deployment -n <your-namespace>
+          echo "Kubernetes resources applied successfully!"
         working-directory: ./frontend/k8s

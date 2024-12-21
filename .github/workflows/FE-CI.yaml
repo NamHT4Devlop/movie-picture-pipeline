@@ -1,4 +1,4 @@
-name: Frontend Continuous Integration Workflow
+name: Frontend CI Workflow
 
 on:
   workflow_dispatch:
@@ -29,32 +29,43 @@ jobs:
         with:
           path: |
             ~/.npm
-            node_modules
+            frontend/node_modules
           key: npm-${{ hashFiles('frontend/package-lock.json', 'frontend/package.json') }}
           restore-keys: |
             npm-
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
         working-directory: ./frontend
 
       - name: Run ESLint
         run: npm run lint -- --fix
         working-directory: ./frontend
 
-      - name: Run Tests
-        run: npm test
-        working-directory: ./frontend
-
   test:
-    name: Frontend Testing
+    name: Frontend Execute Test Cases
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16.x
+
+      - name: Cache Node.js dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            frontend/node_modules
+          key: npm-${{ hashFiles('frontend/package-lock.json', 'frontend/package.json') }}
+          restore-keys: |
+            npm-
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
         working-directory: ./frontend
 
       - name: Run Tests
@@ -69,8 +80,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16.x
+
+      - name: Cache Node.js dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            frontend/node_modules
+          key: npm-${{ hashFiles('frontend/package-lock.json', 'frontend/package.json') }}
+          restore-keys: |
+            npm-
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
         working-directory: ./frontend
 
       - name: Configure AWS Credentials
@@ -101,15 +127,28 @@ jobs:
           IMAGE_TAG: latest
         run: |
           set -e
+          echo "Step: Update kubeconfig for EKS cluster"
           aws eks update-kubeconfig --name cluster
+          
+          echo "Step: Retrieve external IP of the backend service"
           export EXTERNALIP=$(kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}')
-          echo "External IP: $EXTERNALIP"
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP .
+          echo "External IP resolved: $EXTERNALIP"
+          
+          echo "Step: Docker build - Using arguments:"
+          echo "Registry: $REGISTRY"
+          echo "Repository: $REPOSITORY"
+          echo "Image Tag: $IMAGE_TAG"
+          echo "Backend Service URL: http://$EXTERNALIP"
+          
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP ./frontend
+          echo "Step: Docker image built successfully"
+          
+          echo "Step: Push Docker image to ECR"
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          echo "Docker image pushed successfully: $REGISTRY/$REPOSITORY:$IMAGE_TAG"
 
       - name: Cache Docker image
         uses: actions/cache@v3
         with:
           path: ~/.docker
           key: docker-${{ github.sha }}-frontend
-

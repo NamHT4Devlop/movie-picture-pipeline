@@ -1,4 +1,4 @@
-name: Backend Continuous Integration Workflow
+name: Backend CI Workflow
 
 on:
   workflow_dispatch:
@@ -39,7 +39,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pipenv install
+          pipenv install --dev
         working-directory: ./backend
 
   lint:
@@ -140,4 +140,18 @@ jobs:
 
       - name: Push Docker image to ECR
         run: |
+          echo "Pushing Docker image to ECR"
+          echo "Registry: $REGISTRY"
+          echo "Repository: $REPOSITORY"
+          echo "Image Tag: $IMAGE_TAG"
+
+          # Push Docker image
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+          # Kiểm tra mã thoát của lệnh docker push
+          if [ $? -eq 0 ]; then
+            echo "Docker image pushed successfully!"
+          else
+            echo "Docker image push failed!"
+            exit 1
+          fi
