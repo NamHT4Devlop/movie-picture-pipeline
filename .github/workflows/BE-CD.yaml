@@ -165,6 +165,10 @@ jobs:
       - name: Debug AWS Credentials
         run: |
           aws sts get-caller-identity
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
 
       - name: Connect to Amazon ECR
         id: login-ecr
@@ -202,7 +206,8 @@ jobs:
           fi
           
           echo "=== Step: Verifying Kustomize Configuration ==="
-          kustomize build ./backend/k8s | grep "image:" || echo "Warning: No image configuration found." 
+          kustomize build ./backend/k8s | grep "image:" || echo "Warning: No image configuration found."
+        working-directory: ./backend/k8s
 
       - name: Deploy Kubernetes Resources
         run: |
