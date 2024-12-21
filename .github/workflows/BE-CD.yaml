@@ -36,17 +36,14 @@ jobs:
 
       - name: Setup Install pipenv with pip
         run: |
-          pip --version
           pip install pipenv && pip install flake8
 
       - name: Setup Install dependencies with pip
         run: |
-          pip --version
           pipenv install
 
       - name: Execute lint with pipenv
         run: |
-          pipenv --version
           pipenv run lint
 
   test:
@@ -66,17 +63,14 @@ jobs:
 
       - name: Setup Install pipenv with pip
         run: |
-          pip --version
           pip install pipenv && pip install flake8
 
       - name: Setup Install dependencies with pip
         run: |
-          pip --version
           pipenv install
 
       - name: Execute Test Cases with pipenv
         run: |
-          pipenv --version
           pipenv run test
 
   build:
