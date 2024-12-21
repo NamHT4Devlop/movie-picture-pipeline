@@ -13,9 +13,6 @@ jobs:
   lint:
     name: Frontend Linting Jobs
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [16.x]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,13 +20,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 16.x
 
       - name: Cache Node.js dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.npm
-          key: npm-${{ hashFiles('frontend/package-lock.json') }}
+          path: |
+            ~/.npm
+            node_modules
+          key: npm-${{ hashFiles('frontend/package-lock.json', 'frontend/package.json') }}
           restore-keys: |
             npm-
 
@@ -79,28 +78,36 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Debug AWS Credentials
+        run: |
+          aws sts get-caller-identity
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
         with:
           mask-password: true
 
-      - name: Build and Push Docker Image
+      - name: Build and Push Docker Image to ECR
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: frontend
           IMAGE_TAG: latest
         run: |
+          set -e
           aws eks update-kubeconfig --name cluster
           export EXTERNALIP=$(kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}')
-          echo $EXTERNALIP
-          ls
-          cd frontend
+          echo "External IP: $EXTERNALIP"
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP .
-          docker images
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
       - name: Cache Docker image
         uses: actions/cache@v3
         with:
           path: ~/.docker
           key: docker-${{ github.sha }}-frontend
+
