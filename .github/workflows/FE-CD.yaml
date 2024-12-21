@@ -16,6 +16,9 @@ jobs:
   lint:
     name: Lint Frontend Code Job
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -37,6 +40,9 @@ jobs:
   test:
     name: Run Frontend Unit Tests Job
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -142,6 +148,11 @@ jobs:
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig --name cluster
+
+      - name: Run init.sh
+        run:  |
+          ./init.sh || true
+        working-directory: ./setup
 
       - name: Set Docker image in Kustomize
         env:
