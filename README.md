@@ -406,6 +406,21 @@ kustomize edit set image backend=<ECR_REPO_URL>:<NEW_TAG_HERE>
 # Apply the manifests to the cluster
 kustomize build | kubectl apply -f -
 ```
+### deploy app Back End
+## image API BE Get: ![img.png](img.png)
+## URL: http://ac80a09145e7a437abac2668a6204512-437873353.us-east-1.elb.amazonaws.com/movies
+## image API BE Get ID: ![img_1.png](img_1.png)
+## URL: http://ac80a09145e7a437abac2668a6204512-437873353.us-east-1.elb.amazonaws.com/movies/123
+
+### deploy app Font End
+## Image UI Home: ![img_2.png](img_2.png)
+## Image UI Detail: ![img_3.png](img_3.png)
+## URL: http://a56bd6452b61e489bb72493cc01bb3f6-121839225.us-east-1.elb.amazonaws.com/
+
+
+
+
+
 
 ## License
 
