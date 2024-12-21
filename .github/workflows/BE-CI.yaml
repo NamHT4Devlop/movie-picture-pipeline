@@ -11,14 +11,9 @@ on:
       - "backend/**"
 
 jobs:
-  setup:
-    name: Setup Python and Dependencies
-    runs-on: ubuntu-latest
-
   lint:
-    name: Backend Code Quality Checks
+    name: Backend Linting Jobs
     runs-on: ubuntu-latest
-    needs: setup
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,9 +47,8 @@ jobs:
         working-directory: ./backend
 
   test:
-    name: Backend Execute Test Cases
+    name: Backend Run Tests
     runs-on: ubuntu-latest
-    needs: setup
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
