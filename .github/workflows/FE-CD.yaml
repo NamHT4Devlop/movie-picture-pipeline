@@ -14,13 +14,13 @@ env:
 
 jobs:
   lint:
-    name: Lint Frontend Code
+    name: Lint Frontend Code Job
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Cache Node.js dependencies
+      - name: Cache Node.js Packages
         uses: actions/cache@v3
         with:
           path: ~/.npm
@@ -28,14 +28,14 @@ jobs:
           restore-keys: |
             npm-
 
-      - name: Install dependencies
+      - name: Setup Install Packages
         run: npm install
 
-      - name: Run ESLint
+      - name: Execute run ESLint
         run: npm run lint -- --fix
 
   test:
-    name: Run Frontend Unit Tests
+    name: Run Frontend Unit Tests Job
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -44,7 +44,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
+      - name: FE Execute Test Cases
         run: npm test
 
   build:
@@ -55,7 +55,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Setup Install dependencies
         run: npm install
 
       - name: Configure AWS Credentials
@@ -73,7 +73,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
 
-      - name: Login to Amazon ECR
+      - name: Connect to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
         with:
@@ -133,7 +133,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
 
-      - name: Login to Amazon ECR
+      - name: Connect to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
         with:
