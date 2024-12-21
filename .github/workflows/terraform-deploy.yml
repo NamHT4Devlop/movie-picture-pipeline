@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - development
   pull_request:
 
 jobs:
@@ -45,16 +46,20 @@ jobs:
 
       - name: Terraform Validate
         working-directory: setup/terraform
-        run: terraform validate -no-color
+        run: terraform validate -no-color -lock=false
 
-      - name: Terraform Destroy
+      - name: Terraform Plan
         working-directory: setup/terraform
-        run: terraform destroy -auto-approve -input=false
+        run: terraform plan -no-color -lock=false
+
+      - name: Terraform Apply
+        working-directory: setup/terraform
+        run: terraform apply -auto-approve -input=false
 
       - name: Notify on Success
         if: success()
-        run: echo "Terraform Destroy completed successfully!"
+        run: echo "Terraform Apply completed successfully!"
 
       - name: Notify on Failure
         if: failure()
-        run: echo "Terraform Destroy failed. Please check the logs for errors."
+        run: echo "Terraform Apply failed. Please check the logs for errors."

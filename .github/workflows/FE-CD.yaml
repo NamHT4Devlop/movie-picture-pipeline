@@ -97,6 +97,7 @@ jobs:
           echo "Image Tag: $IMAGE_TAG"
           echo "ECR: $REGISTRY/$REPOSITORY:$IMAGE_TAG ."
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG --build-arg=REACT_APP_MOVIE_API_URL=http://$EXTERNALIP .
+          echo "React API endpoint: http://$EXTERNALIP"
           docker images
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
