@@ -10,7 +10,7 @@ on:
 
 jobs:
   terraform:
-    name: Terraform
+    name: Terraform create resource aws
     runs-on: ubuntu-latest
 
     steps:
