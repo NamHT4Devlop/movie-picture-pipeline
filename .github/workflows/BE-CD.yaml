@@ -184,54 +184,14 @@ jobs:
           chmod +x ./setup/init.sh
           ./setup/init.sh || true
 
-      - name: Configure Docker Image in Kustomize
+      - name: Set Docker image in Kustomize
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: backend
           IMAGE_TAG: latest
-        run: |
-          echo "=== Step: Logging Kustomize Configuration Details ==="
-          echo "Registry: $REGISTRY"
-          echo "Repository: $REPOSITORY"
-          echo "Image Tag: $IMAGE_TAG"
-          echo "Working Directory: ./backend/k8s"
-          
-          echo "=== Step: Configuring Docker Image in Kustomize ==="
-          kustomize edit set image backend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
-          if [ $? -eq 0 ]; then
-            echo "Kustomize configuration updated successfully."
-          else
-            echo "Error: Failed to update Kustomize configuration." >&2
-            exit 1
-          fi
-          
-          echo "=== Step: Verifying Kustomize Configuration ==="
-          kustomize build ./backend/k8s | grep "image:" || echo "Warning: No image configuration found."
+        run: kustomize edit set image backend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
         working-directory: ./backend/k8s
 
-      - name: Deploy Kubernetes Resources
-        run: |
-          echo "=== Step: Preparing to Deploy Kubernetes Resources ==="
-          echo "Working Directory: ./backend/k8s"
-
-          echo "=== Step: Building Kubernetes Manifests with Kustomize ==="
-          kustomize build ./backend/k8s > k8s-manifest.yaml
-          if [ $? -eq 0 ]; then
-            echo "Kustomize build completed successfully. Output saved to k8s-manifest.yaml."
-          else
-            echo "Error: Kustomize build failed." >&2
-            exit 1
-          fi
-
-          echo "=== Step: Applying Kubernetes Resources ==="
-          kubectl apply -f k8s-manifest.yaml
-          if [ $? -eq 0 ]; then
-            echo "Kubernetes resources deployed successfully."
-          else
-            echo "Error: Failed to deploy Kubernetes resources." >&2
-            exit 1
-          fi
-
-          echo "=== Step: Verifying Kubernetes Resource Deployment ==="
-          kubectl get all -n default || echo "Warning: Unable to retrieve Kubernetes resources."
+      - name: Apply Kubernetes resources
+        run: kustomize build | kubectl apply -f -
         working-directory: ./backend/k8s
