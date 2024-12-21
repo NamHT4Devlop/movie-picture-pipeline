@@ -50,6 +50,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install pipenv
+        run: pip install pipenv
+
       - name: Run lint with pipenv
         run: |
           pipenv run lint
@@ -62,6 +65,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Install pipenv
+        run: pip install pipenv
 
       - name: Run tests with pipenv
         run: |
