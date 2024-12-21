@@ -178,17 +178,7 @@ jobs:
           echo "Kustomize configuration updated successfully"
         working-directory: ./frontend/k8s
 
-      - name: Apply Kubernetes Resources
+      - name: Apply Kubernetes resources
         run: |
-          echo "Building Kubernetes manifests..."
-          kustomize build ./frontend/k8s > k8s-manifest.yaml
-          echo "Generated Kubernetes manifests:"
-          cat k8s-manifest.yaml
-
-          echo "Applying Kubernetes resources..."
-          kubectl apply -f k8s-manifest.yaml
-
-          echo "Deployment status:"
-          kubectl rollout status deployment/frontend-deployment -n <your-namespace>
-          echo "Kubernetes resources applied successfully!"
+          kustomize build | kubectl apply -f -
         working-directory: ./frontend/k8s
