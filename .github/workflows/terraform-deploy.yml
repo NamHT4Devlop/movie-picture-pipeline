@@ -46,7 +46,7 @@ jobs:
 
       - name: Terraform Validate
         working-directory: setup/terraform
-        run: terraform validate -no-color -lock=false
+        run: terraform validate -no-color
 
       - name: Terraform Plan
         working-directory: setup/terraform
